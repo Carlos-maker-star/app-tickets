@@ -13,6 +13,7 @@ app-tickets/
 ├── backend/            API REST en Spring Boot (Java 21, Maven)
 ├── frontend/           Cliente Angular 22 + Angular Material + Tailwind
 ├── .claude/launch.json Servidores para el panel de preview (backend :8080, frontend :4200)
+├── render.yaml         Blueprint de Render (backend en Docker, plan Free)
 ├── .mcp.json           MCP de Supabase para Claude Code (NO lo usa el backend)
 └── CLAUDE.md
 ```
@@ -238,3 +239,10 @@ src/
 ## Preview en Claude Code
 
 `.claude/launch.json` define `backend` y `frontend`. El backend recibe `-Djdk.net.unixdomain.tmpdir=backend/target`: sin eso, en el entorno de preview Java falla con "Unable to establish loopback connection" (ruta temporal demasiado larga en Windows).
+
+## Despliegue
+
+- **Backend → Render**: `render.yaml` (Blueprint) construye `backend/Dockerfile` (multi-stage, JRE 21, heap limitado para 512 MB). Render define `PORT`, que `server.port` ya lee. Secretos solo en el panel de Render. Health check: `/v3/api-docs`. Plan Free: se duerme tras ~15 min sin tráfico.
+- **Frontend → Vercel**: Root Directory `frontend`; `frontend/vercel.json` fija la salida `dist/tickets-web/browser` y reescribe todas las rutas a `index.html` (rutas de Angular). `ng build` usa `environment.prod.ts` (URL de Render) por `fileReplacements`. Node 24 (`engines` en `package.json`).
+- Tras cambiar la URL del frontend, actualizar `CORS_ALLOWED_ORIGINS` en Render.
+- Ambos se redespliegan solos con cada `git push` a `main`.

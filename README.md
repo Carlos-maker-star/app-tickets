@@ -65,3 +65,21 @@ Abre `http://localhost:4200` e inicia sesión con el administrador.
 cd backend && ./mvnw test
 cd frontend && npx ng test --watch=false
 ```
+
+## Despliegue (gratis)
+
+| Parte | Servicio | Configuración |
+|---|---|---|
+| Backend | [Render](https://render.com) (Docker, plan Free) | `render.yaml` + `backend/Dockerfile` |
+| Frontend | [Vercel](https://vercel.com) | `frontend/vercel.json`, directorio raíz `frontend` |
+| Base de datos | Supabase | la misma conexión del `.env` |
+
+1. **Render** → *New* → *Blueprint* → este repositorio. Completa las variables secretas
+   (las mismas de `backend/.env`; `JWT_SECRET` se genera solo). La API queda en
+   `https://app-tickets-api.onrender.com`.
+2. **Vercel** → *Add New Project* → este repositorio → *Root Directory*: `frontend`.
+3. En Render, pon en `CORS_ALLOWED_ORIGINS` la URL que te dio Vercel (sin `/` final).
+
+Si Render asigna otra URL, cámbiala en `frontend/src/environments/environment.prod.ts`.
+En el plan gratis, Render apaga la API tras ~15 min sin uso y la primera petición tarda
+cerca de un minuto en despertar.
