@@ -1,0 +1,13 @@
+# Secretos (cada subproyecto tiene además su propio .gitignore)
+.env
+*.env.local
+
+# Configuración local de Claude Code (permisos personales)
+.claude/settings.local.json
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+/.idea/
+/.vscode/
+*.iml

@@ -1,0 +1,208 @@
+@if (cargando() && !ticket()) {
+  <mat-progress-bar mode="indeterminate" />
+} @else if (noEncontrado()) {
+  <div class="mx-auto flex max-w-md flex-col items-center gap-3 py-24 text-center">
+    <span class="flex size-12 items-center justify-center rounded-full bg-primary-soft text-primary">
+      <mat-icon aria-hidden="true">search_off</mat-icon>
+    </span>
+    <p class="m-0 text-lg font-semibold">No pudimos abrir este ticket</p>
+    <p class="m-0 text-sm text-muted">Puede que no exista o que no tengas acceso a él.</p>
+    <a matButton="outlined" routerLink="/tickets">Volver a tickets</a>
+  </div>
+} @else if (ticket(); as t) {
+  <div class="flex flex-col gap-6">
+    <nav aria-label="Ruta" class="flex items-center gap-2 text-sm">
+      <a routerLink="/tickets" class="text-subtle no-underline hover:text-primary hover:underline">Tickets</a>
+      <mat-icon class="icono-xs text-subtle" aria-hidden="true">chevron_right</mat-icon>
+      <span class="font-mono font-semibold">{{ t.codigo }}</span>
+    </nav>
+
+    <!-- Encabezado + acciones -->
+    <div class="flex flex-wrap items-start justify-between gap-6">
+      <div class="flex min-w-0 flex-col gap-2.5">
+        <div class="flex flex-wrap items-center gap-2.5">
+          <span class="font-mono text-[13px] text-subtle">{{ t.codigo }}</span>
+          <app-estado-badge [estado]="t.estado" />
+          <app-prioridad-badge [prioridad]="t.prioridad" [conBorde]="true" />
+        </div>
+        <h1 class="m-0 text-[26px] font-semibold tracking-tight">{{ t.titulo }}</h1>
+        <p class="m-0 text-sm text-muted">
+          Creado por <strong class="font-semibold text-ink">{{ t.creador.nombre }}</strong>
+          · {{ t.createdAt | date: 'd MMM y, HH:mm' }} · {{ t.categoria.nombre }}
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        @if (t.editable) {
+          <button matButton type="button" (click)="editar()">
+            <mat-icon>edit</mat-icon>
+            Editar
+          </button>
+        }
+        @if (puedeTomar()) {
+          <button matButton="outlined" type="button" (click)="tomar()">
+            <mat-icon>front_hand</mat-icon>
+            Tomar ticket
+          </button>
+        }
+        @for (accion of acciones(); track accion.destino) {
+          @if (accion.estilo === 'primario') {
+            <button matButton="filled" type="button" (click)="cambiarEstado(accion)">
+              <mat-icon>{{ accion.icono }}</mat-icon>
+              {{ accion.etiqueta }}
+            </button>
+          } @else {
+            <button matButton="outlined" type="button" [class.boton-peligro]="accion.estilo === 'peligro'" (click)="cambiarEstado(accion)">
+              <mat-icon>{{ accion.icono }}</mat-icon>
+              {{ accion.etiqueta }}
+            </button>
+          }
+        }
+      </div>
+    </div>
+
+    @if (t.estado === 'RESUELTO' && t.transicionesPermitidas.includes('CERRADO') && auth.usuario()?.id === t.creador.id) {
+      <div class="flex items-center gap-3 rounded-xl border border-resuelto-fg/30 bg-resuelto-bg px-4 py-3 text-sm text-resuelto-fg" role="status">
+        <mat-icon aria-hidden="true">task_alt</mat-icon>
+        El técnico marcó este ticket como resuelto. Confirma para cerrarlo, o reábrelo si el problema sigue.
+      </div>
+    }
+
+    <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <!-- Columna principal -->
+      <div class="flex flex-col gap-5">
+        <section class="flex flex-col gap-3 rounded-xl border border-line bg-surface px-6 py-5">
+          <h2 class="m-0 text-[13px] font-semibold uppercase tracking-wide text-subtle">Descripción</h2>
+          <p class="m-0 whitespace-pre-line text-[15px] leading-relaxed">{{ t.descripcion }}</p>
+        </section>
+
+        <section class="flex flex-col rounded-xl border border-line bg-surface">
+          <div class="flex items-center gap-2 border-b border-line px-6 py-4">
+            <h2 class="m-0 text-base font-semibold">Comentarios</h2>
+            <span class="rounded-full bg-track px-2 text-xs font-semibold text-muted">{{ comentarios().length }}</span>
+          </div>
+
+          <div class="flex flex-col gap-4 px-6 py-5">
+            @for (c of comentarios(); track c.id) {
+              <article
+                class="flex gap-3"
+                [class]="c.interno ? '-mx-3.5 rounded-[10px] border border-interno-line bg-interno-bg p-3.5' : ''"
+              >
+                <app-avatar [nombre]="c.autor.nombre" tamanio="md" />
+                <div class="flex min-w-0 flex-1 flex-col gap-1.5">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-sm font-semibold">{{ c.autor.nombre }}</span>
+                    @if (c.autor.id === t.creador.id) {
+                      <span class="text-xs text-subtle">· Creador</span>
+                    }
+                    @if (c.interno) {
+                      <span class="inline-flex items-center gap-1 rounded-full border border-interno-line px-2 text-[11px] font-semibold text-interno-ink">
+                        <mat-icon class="size-3! text-[12px]!" aria-hidden="true">lock</mat-icon>
+                        Interno
+                      </span>
+                    }
+                    <span class="text-xs text-subtle" [title]="c.createdAt | date: 'd MMM y, HH:mm'">{{ c.createdAt | tiempoRelativo }}</span>
+                  </div>
+                  <p class="m-0 whitespace-pre-line text-sm leading-relaxed">{{ c.contenido }}</p>
+                </div>
+              </article>
+            } @empty {
+              <p class="m-0 text-sm text-subtle">Aún no hay comentarios.</p>
+            }
+          </div>
+
+          @if (t.estado !== 'CERRADO') {
+            <form class="flex flex-col gap-3 border-t border-line px-6 pt-4 pb-5" (ngSubmit)="comentar()">
+              <mat-form-field>
+                <mat-label>Agregar comentario</mat-label>
+                <textarea
+                  matInput
+                  [formControl]="nuevoComentario"
+                  rows="3"
+                  maxlength="5000"
+                  [placeholder]="auth.esStaff() ? 'Escribe una respuesta o una nota para el equipo' : 'Escribe tu respuesta'"
+                ></textarea>
+              </mat-form-field>
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                @if (auth.esStaff()) {
+                  <mat-checkbox [formControl]="comentarioInterno">Comentario interno (solo técnicos y administradores)</mat-checkbox>
+                } @else {
+                  <span></span>
+                }
+                <button matButton="filled" type="submit" [disabled]="enviando() || nuevoComentario.invalid">Comentar</button>
+              </div>
+            </form>
+          } @else {
+            <p class="m-0 border-t border-line px-6 py-4 text-sm text-subtle">Este ticket está cerrado y ya no admite comentarios.</p>
+          }
+        </section>
+      </div>
+
+      <!-- Columna lateral -->
+      <div class="flex flex-col gap-5">
+        <section class="rounded-xl border border-line bg-surface">
+          <h2 class="m-0 border-b border-line px-5 py-4 text-base font-semibold">Detalles</h2>
+          <dl class="m-0 grid grid-cols-[112px_minmax(0,1fr)] items-center gap-x-3 gap-y-3.5 px-5 py-4.5 text-sm">
+            <dt class="text-subtle">Estado</dt>
+            <dd class="m-0"><app-estado-badge [estado]="t.estado" /></dd>
+            <dt class="text-subtle">Prioridad</dt>
+            <dd class="m-0"><app-prioridad-badge [prioridad]="t.prioridad" /></dd>
+            <dt class="text-subtle">Categoría</dt>
+            <dd class="m-0 font-medium">{{ t.categoria.nombre }}</dd>
+            <dt class="text-subtle">Creado por</dt>
+            <dd class="m-0 flex items-center gap-2 font-medium">
+              <app-avatar [nombre]="t.creador.nombre" />
+              <span class="truncate">{{ t.creador.nombre }}</span>
+            </dd>
+            <dt class="text-subtle">Asignado a</dt>
+            <dd class="m-0 flex items-center gap-2 font-medium">
+              @if (t.asignado; as asignado) {
+                <app-avatar [nombre]="asignado.nombre" />
+                <span class="flex-1 truncate">{{ asignado.nombre }}</span>
+              } @else {
+                <span class="flex-1 text-subtle">Sin asignar</span>
+              }
+              @if (puedeAsignar()) {
+                <button type="button" class="cursor-pointer border-0 bg-transparent p-0 font-sans text-[13px] font-medium text-primary hover:underline" (click)="asignar()">
+                  {{ t.asignado ? 'Reasignar' : 'Asignar' }}
+                </button>
+              }
+            </dd>
+            <dt class="text-subtle">Creado</dt>
+            <dd class="m-0">{{ t.createdAt | date: 'd MMM y, HH:mm' }}</dd>
+            <dt class="text-subtle">Actualizado</dt>
+            <dd class="m-0">{{ t.updatedAt | tiempoRelativo }}</dd>
+            @if (t.resueltoAt) {
+              <dt class="text-subtle">Resuelto</dt>
+              <dd class="m-0">{{ t.resueltoAt | date: 'd MMM y, HH:mm' }}</dd>
+            }
+            @if (t.cerradoAt) {
+              <dt class="text-subtle">Cerrado</dt>
+              <dd class="m-0">{{ t.cerradoAt | date: 'd MMM y, HH:mm' }}</dd>
+            }
+          </dl>
+        </section>
+
+        <section class="rounded-xl border border-line bg-surface">
+          <h2 class="m-0 border-b border-line px-5 py-4 text-base font-semibold">Historial</h2>
+          <ol class="m-0 flex list-none flex-col px-5 py-4.5">
+            @for (h of historialReciente(); track h.id; let ultimo = $last) {
+              <li class="grid grid-cols-[20px_minmax(0,1fr)] gap-x-3">
+                <div class="flex flex-col items-center">
+                  <span class="mt-1.5 size-2.5 shrink-0 rounded-full bg-primary"></span>
+                  @if (!ultimo) {
+                    <span class="min-h-4.5 w-0.5 flex-1 bg-line"></span>
+                  }
+                </div>
+                <div class="flex flex-col gap-0.5 pb-4">
+                  <span class="text-sm leading-snug"><strong class="font-semibold">{{ h.usuario.nombre }}</strong> {{ describir(h) }}</span>
+                  <span class="text-xs text-subtle" [title]="h.createdAt | date: 'd MMM y, HH:mm'">{{ h.createdAt | tiempoRelativo }}</span>
+                </div>
+              </li>
+            }
+          </ol>
+        </section>
+      </div>
+    </div>
+  </div>
+}

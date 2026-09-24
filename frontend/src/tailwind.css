@@ -1,0 +1,126 @@
+@import 'tailwindcss';
+
+/* Modo oscuro por clase: ThemeService pone/quita `dark` en <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Colores de los bocetos expuestos como utilidades: bg-surface, text-muted, border-line, bg-abierto-bg... */
+@theme inline {
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+
+  --color-app: var(--app-bg);
+  --color-surface: var(--app-surface);
+  --color-surface-2: var(--app-surface-2);
+  --color-line: var(--app-border);
+  --color-ink: var(--app-text);
+  --color-muted: var(--app-muted);
+  --color-subtle: var(--app-subtle);
+  --color-primary: var(--app-primary);
+  --color-primary-soft: var(--app-primary-soft);
+  --color-on-primary: var(--app-on-primary);
+  --color-nav-active: var(--app-nav-active);
+  --color-nav-active-ink: var(--app-nav-active-text);
+  --color-brand-panel: var(--app-brand-panel);
+  --color-track: var(--app-track);
+
+  --color-abierto-bg: var(--app-abierto-bg);
+  --color-abierto-fg: var(--app-abierto-fg);
+  --color-progreso-bg: var(--app-progreso-bg);
+  --color-progreso-fg: var(--app-progreso-fg);
+  --color-espera-bg: var(--app-espera-bg);
+  --color-espera-fg: var(--app-espera-fg);
+  --color-resuelto-bg: var(--app-resuelto-bg);
+  --color-resuelto-fg: var(--app-resuelto-fg);
+  --color-cerrado-bg: var(--app-cerrado-bg);
+  --color-cerrado-fg: var(--app-cerrado-fg);
+
+  --color-baja: var(--app-baja);
+  --color-media: var(--app-media);
+  --color-alta: var(--app-alta);
+  --color-critica: var(--app-critica);
+
+  --color-interno-bg: var(--app-interno-bg);
+  --color-interno-line: var(--app-interno-border);
+  --color-interno-ink: var(--app-interno-fg);
+}
+
+:root {
+  --app-bg: #f5f6f8;
+  --app-surface: #ffffff;
+  --app-surface-2: #f9fafb;
+  --app-border: #e4e7ec;
+  --app-text: #101828;
+  --app-muted: #475467;
+  --app-subtle: #667085;
+  --app-primary: #4338ca;
+  --app-primary-soft: #eef2ff;
+  --app-on-primary: #ffffff;
+  --app-nav-active: #eef2ff;
+  --app-nav-active-text: #3730a3;
+  --app-brand-panel: #312e81;
+  --app-track: #f2f4f7;
+
+  --app-abierto-bg: #dbeafe;
+  --app-abierto-fg: #1e40af;
+  --app-progreso-bg: #fef3c7;
+  --app-progreso-fg: #92400e;
+  --app-espera-bg: #ede9fe;
+  --app-espera-fg: #5b21b6;
+  --app-resuelto-bg: #dcfce7;
+  --app-resuelto-fg: #166534;
+  --app-cerrado-bg: #eaecf0;
+  --app-cerrado-fg: #344054;
+
+  --app-baja: #98a2b3;
+  --app-media: #3b82f6;
+  --app-alta: #ea580c;
+  --app-critica: #dc2626;
+
+  --app-interno-bg: #fffbeb;
+  --app-interno-border: #fcd34d;
+  --app-interno-fg: #92400e;
+}
+
+.dark {
+  --app-bg: #0b0f17;
+  --app-surface: #121926;
+  --app-surface-2: #0e1420;
+  --app-border: #223044;
+  --app-text: #e6eaf2;
+  --app-muted: #a3aec2;
+  --app-subtle: #8592a8;
+  --app-primary: #818cf8;
+  --app-primary-soft: rgb(129 140 248 / 0.14);
+  --app-on-primary: #0b0f17;
+  --app-nav-active: rgb(129 140 248 / 0.14);
+  --app-nav-active-text: #c7d2fe;
+  --app-brand-panel: #1a1747;
+  --app-track: #1b2433;
+
+  --app-abierto-bg: rgb(59 130 246 / 0.18);
+  --app-abierto-fg: #93c5fd;
+  --app-progreso-bg: rgb(245 158 11 / 0.18);
+  --app-progreso-fg: #fcd34d;
+  --app-espera-bg: rgb(139 92 246 / 0.22);
+  --app-espera-fg: #c4b5fd;
+  --app-resuelto-bg: rgb(34 197 94 / 0.18);
+  --app-resuelto-fg: #86efac;
+  --app-cerrado-bg: rgb(152 162 179 / 0.16);
+  --app-cerrado-fg: #d0d5dd;
+
+  --app-baja: #667085;
+  --app-media: #60a5fa;
+  --app-alta: #fb923c;
+  --app-critica: #f87171;
+
+  --app-interno-bg: rgb(245 158 11 / 0.08);
+  --app-interno-border: rgb(245 158 11 / 0.4);
+  --app-interno-fg: #fcd34d;
+}
+
+@layer base {
+  body {
+    @apply bg-app font-sans text-ink antialiased;
+    margin: 0;
+  }
+}

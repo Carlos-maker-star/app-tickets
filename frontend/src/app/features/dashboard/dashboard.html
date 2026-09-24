@@ -1,0 +1,100 @@
+<div class="flex flex-col gap-6">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div class="flex flex-col gap-1.5">
+      <h1 class="m-0 text-[28px] font-semibold tracking-tight">{{ saludo() }}, {{ primerNombre() }}</h1>
+      <p class="m-0 text-sm text-muted">
+        {{ auth.esUsuario() ? 'Así van tus incidencias.' : 'Estado general de las incidencias de la mesa de ayuda.' }}
+      </p>
+    </div>
+    <button matButton="filled" type="button" (click)="nuevoTicket()">
+      <mat-icon>add</mat-icon>
+      Nuevo ticket
+    </button>
+  </div>
+
+  <!-- KPIs -->
+  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    @for (kpi of kpis(); track kpi.titulo) {
+      <div class="flex flex-col gap-2.5 rounded-xl border border-line bg-surface p-5">
+        <div class="flex items-center justify-between">
+          <span class="text-[13px] font-medium text-muted">{{ kpi.titulo }}</span>
+          <span class="flex size-8 items-center justify-center rounded-lg" [class]="kpi.tono">
+            <mat-icon class="icono-xs" aria-hidden="true">{{ kpi.icono }}</mat-icon>
+          </span>
+        </div>
+        <span class="text-[32px] font-semibold tracking-tight">{{ kpi.valor }}</span>
+        <span class="text-[13px] text-subtle">{{ kpi.detalle }}</span>
+      </div>
+    } @empty {
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="h-[134px] animate-pulse rounded-xl border border-line bg-surface"></div>
+      }
+    }
+  </div>
+
+  <!-- Gráficos -->
+  <div class="grid gap-4 lg:grid-cols-2">
+    <section class="flex flex-col gap-4.5 rounded-xl border border-line bg-surface px-6 py-5">
+      <h2 class="m-0 text-base font-semibold">Tickets por estado</h2>
+      @for (barra of barrasEstado(); track barra.etiqueta) {
+        <div class="grid grid-cols-[116px_minmax(0,1fr)_32px] items-center gap-3">
+          <span class="text-[13px] font-medium">{{ barra.etiqueta }}</span>
+          <div class="h-2.5 overflow-hidden rounded-full bg-track">
+            <div class="h-full rounded-full transition-[width] duration-500" [class]="barra.color" [style.width]="barra.ancho"></div>
+          </div>
+          <span class="text-right text-sm font-semibold tabular-nums">{{ barra.valor }}</span>
+        </div>
+      }
+    </section>
+    <section class="flex flex-col gap-4.5 rounded-xl border border-line bg-surface px-6 py-5">
+      <h2 class="m-0 text-base font-semibold">Tickets por prioridad</h2>
+      @for (barra of barrasPrioridad(); track barra.etiqueta) {
+        <div class="grid grid-cols-[116px_minmax(0,1fr)_32px] items-center gap-3">
+          <span class="inline-flex items-center gap-2 text-[13px] font-medium">
+            <span class="size-2 rounded-full" [class]="barra.color"></span>
+            {{ barra.etiqueta }}
+          </span>
+          <div class="h-2.5 overflow-hidden rounded-full bg-track">
+            <div class="h-full rounded-full transition-[width] duration-500" [class]="barra.color" [style.width]="barra.ancho"></div>
+          </div>
+          <span class="text-right text-sm font-semibold tabular-nums">{{ barra.valor }}</span>
+        </div>
+      }
+    </section>
+  </div>
+
+  <!-- Recientes -->
+  <section class="overflow-hidden rounded-xl border border-line bg-surface">
+    <div class="flex items-center justify-between border-b border-line px-6 py-4">
+      <h2 class="m-0 text-base font-semibold">Tickets recientes</h2>
+      <a routerLink="/tickets" class="text-sm font-medium text-primary no-underline hover:underline">Ver todos</a>
+    </div>
+    @for (t of recientes(); track t.id) {
+      <a
+        [routerLink]="['/tickets', t.id]"
+        class="grid h-13 grid-cols-[110px_minmax(0,1fr)_auto] items-center gap-4 border-b border-line px-6 text-ink no-underline last:border-b-0 hover:bg-surface-2 md:grid-cols-[120px_minmax(0,1fr)_130px_190px_110px]"
+      >
+        <span class="font-mono text-[13px] text-subtle">{{ t.codigo }}</span>
+        <span class="truncate text-sm font-medium">{{ t.titulo }}</span>
+        <span><app-estado-badge [estado]="t.estado" /></span>
+        <span class="hidden items-center gap-2 text-[13px] md:flex">
+          @if (t.asignado; as asignado) {
+            <app-avatar [nombre]="asignado.nombre" />
+            <span class="truncate">{{ asignado.nombre }}</span>
+          } @else {
+            <span class="text-subtle">Sin asignar</span>
+          }
+        </span>
+        <span class="hidden text-right text-[13px] text-subtle md:block">{{ t.createdAt | tiempoRelativo }}</span>
+      </a>
+    } @empty {
+      <p class="m-0 px-6 py-10 text-center text-sm text-subtle">
+        @if (recientes()) {
+          Todavía no hay tickets. <button type="button" class="cursor-pointer border-0 bg-transparent p-0 font-sans text-sm font-medium text-primary hover:underline" (click)="nuevoTicket()">Crea el primero</button>
+        } @else {
+          Cargando…
+        }
+      </p>
+    }
+  </section>
+</div>

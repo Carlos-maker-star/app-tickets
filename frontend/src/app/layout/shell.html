@@ -1,0 +1,128 @@
+<div class="flex h-dvh overflow-hidden bg-app text-ink">
+  <!-- Fondo oscuro del menú en pantallas chicas -->
+  @if (menuAbierto()) {
+    <div class="fixed inset-0 z-30 bg-black/40 lg:hidden" (click)="menuAbierto.set(false)" aria-hidden="true"></div>
+  }
+
+  <aside
+    class="fixed inset-y-0 left-0 z-40 flex w-62 shrink-0 flex-col gap-7 border-r border-line bg-surface px-4 py-5 transition-transform lg:static lg:translate-x-0"
+    [class.-translate-x-full]="!menuAbierto()"
+  >
+    <a routerLink="/dashboard" class="flex items-center gap-3 px-2 py-1 no-underline text-ink">
+      <span class="flex size-9 items-center justify-center rounded-[10px] bg-primary text-on-primary">
+        <mat-icon class="icono-sm" aria-hidden="true">confirmation_number</mat-icon>
+      </span>
+      <span class="flex flex-col">
+        <span class="text-base font-bold tracking-tight">App Tickets</span>
+        <span class="text-xs text-subtle">Mesa de ayuda</span>
+      </span>
+    </a>
+
+    <nav aria-label="Principal" class="flex flex-col gap-1">
+      <span class="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-subtle">General</span>
+      <a
+        routerLink="/dashboard"
+        routerLinkActive="bg-nav-active! text-nav-active-ink!"
+        (click)="menuAbierto.set(false)"
+        class="flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted no-underline hover:bg-surface-2"
+      >
+        <mat-icon class="icono-sm" aria-hidden="true">space_dashboard</mat-icon>
+        Dashboard
+      </a>
+      <a
+        routerLink="/tickets"
+        routerLinkActive="bg-nav-active! text-nav-active-ink!"
+        (click)="menuAbierto.set(false)"
+        class="flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted no-underline hover:bg-surface-2"
+      >
+        <mat-icon class="icono-sm" aria-hidden="true">confirmation_number</mat-icon>
+        Tickets
+      </a>
+      <button
+        type="button"
+        (click)="nuevoTicket()"
+        class="flex h-10 cursor-pointer items-center gap-3 rounded-lg border-0 bg-transparent px-3 text-left font-sans text-sm font-medium text-muted hover:bg-surface-2"
+      >
+        <mat-icon class="icono-sm" aria-hidden="true">add_circle</mat-icon>
+        Nuevo ticket
+      </button>
+    </nav>
+
+    @if (auth.esAdmin()) {
+      <nav aria-label="Administración" class="flex flex-col gap-1">
+        <span class="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-subtle">Administración</span>
+        <a
+          routerLink="/admin/usuarios"
+          routerLinkActive="bg-nav-active! text-nav-active-ink!"
+          (click)="menuAbierto.set(false)"
+          class="flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted no-underline hover:bg-surface-2"
+        >
+          <mat-icon class="icono-sm" aria-hidden="true">group</mat-icon>
+          Usuarios
+        </a>
+        <a
+          routerLink="/admin/categorias"
+          routerLinkActive="bg-nav-active! text-nav-active-ink!"
+          (click)="menuAbierto.set(false)"
+          class="flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-muted no-underline hover:bg-surface-2"
+        >
+          <mat-icon class="icono-sm" aria-hidden="true">sell</mat-icon>
+          Categorías
+        </a>
+      </nav>
+    }
+
+    <div class="flex-1"></div>
+
+    @if (auth.usuario(); as usuario) {
+      <div class="flex items-center gap-3 rounded-xl border border-line bg-surface-2 p-3">
+        <app-avatar [nombre]="usuario.nombre" tamanio="md" />
+        <div class="flex min-w-0 flex-1 flex-col">
+          <span class="truncate text-sm font-semibold">{{ usuario.nombre }}</span>
+          <span class="truncate text-xs text-subtle">{{ roles[usuario.rol] }}</span>
+        </div>
+        <button matIconButton type="button" (click)="auth.logout()" aria-label="Cerrar sesión" matTooltip="Cerrar sesión">
+          <mat-icon class="icono-sm">logout</mat-icon>
+        </button>
+      </div>
+    }
+  </aside>
+
+  <div class="flex min-w-0 flex-1 flex-col">
+    <header class="flex h-16 shrink-0 items-center gap-3 border-b border-line bg-surface px-4 sm:px-8">
+      <button matIconButton type="button" class="lg:hidden!" (click)="menuAbierto.set(true)" aria-label="Abrir menú">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span class="flex-1 truncate text-sm font-semibold">{{ titulo() }}</span>
+
+      <form class="hidden md:block" (submit)="$event.preventDefault(); buscar(busqueda.value)" role="search">
+        <label class="flex h-10 w-80 items-center gap-2 rounded-lg border border-line bg-surface-2 px-3 text-subtle">
+          <mat-icon class="icono-xs" aria-hidden="true">search</mat-icon>
+          <input
+            #busqueda
+            type="search"
+            aria-label="Buscar tickets"
+            placeholder="Buscar por código o título"
+            class="w-full border-0 bg-transparent font-sans text-sm text-ink outline-none placeholder:text-subtle"
+          />
+        </label>
+      </form>
+
+      <button
+        matIconButton
+        type="button"
+        (click)="tema.alternar()"
+        [attr.aria-label]="tema.oscuro() ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+        [matTooltip]="tema.oscuro() ? 'Modo claro' : 'Modo oscuro'"
+      >
+        <mat-icon>{{ tema.oscuro() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+    </header>
+
+    <main class="flex-1 overflow-y-auto">
+      <div class="mx-auto w-full max-w-[1280px] p-4 sm:p-8">
+        <router-outlet />
+      </div>
+    </main>
+  </div>
+</div>

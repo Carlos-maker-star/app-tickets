@@ -1,0 +1,22 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "backend",
+      "runtimeExecutable": "C:\\project-carlos\\app-tickets\\backend\\mvnw.cmd",
+      "runtimeArgs": [
+        "-f",
+        "C:\\project-carlos\\app-tickets\\backend\\pom.xml",
+        "spring-boot:run",
+        "-Dspring-boot.run.jvmArguments=-Djdk.net.unixdomain.tmpdir=C:\\project-carlos\\app-tickets\\backend\\target"
+      ],
+      "port": 8080
+    },
+    {
+      "name": "frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:\\project-carlos\\app-tickets\\frontend", "start"],
+      "port": 4200
+    }
+  ]
+}

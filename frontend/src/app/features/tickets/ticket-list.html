@@ -1,0 +1,168 @@
+<div class="flex flex-col gap-5">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div class="flex flex-col gap-1.5">
+      <h1 class="m-0 text-[28px] font-semibold tracking-tight">Tickets</h1>
+      <p class="m-0 text-sm text-muted">
+        @if (resultado(); as r) {
+          {{ r.totalElementos }} {{ r.totalElementos === 1 ? 'ticket' : 'tickets' }}
+          @if (auth.esUsuario()) {
+            · solo ves los que tú creaste
+          }
+        } @else {
+          Cargando…
+        }
+      </p>
+    </div>
+    <button matButton="filled" type="button" (click)="nuevoTicket()">
+      <mat-icon>add</mat-icon>
+      Nuevo ticket
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="campo-denso flex flex-wrap items-center gap-3 rounded-xl border border-line bg-surface p-3">
+    <mat-form-field class="min-w-[260px] flex-1">
+      <mat-icon matPrefix class="icono-sm ml-3 text-subtle">search</mat-icon>
+      <input matInput [formControl]="busqueda" type="search" aria-label="Buscar" placeholder="Buscar por título, descripción o código" />
+    </mat-form-field>
+
+    <mat-form-field class="w-44">
+      <mat-label>Estado</mat-label>
+      <mat-select [value]="filtro().estado ?? null" (valueChange)="actualizarFiltro({ estado: asEstado($event) })">
+        <mat-option [value]="null">Todos</mat-option>
+        @for (estado of estados; track estado) {
+          <mat-option [value]="estado">{{ etiquetasEstado[estado].etiqueta }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field class="w-40">
+      <mat-label>Prioridad</mat-label>
+      <mat-select [value]="filtro().prioridad ?? null" (valueChange)="actualizarFiltro({ prioridad: asPrioridad($event) })">
+        <mat-option [value]="null">Todas</mat-option>
+        @for (prioridad of prioridades; track prioridad) {
+          <mat-option [value]="prioridad">{{ etiquetasPrioridad[prioridad].etiqueta }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field class="w-48">
+      <mat-label>Categoría</mat-label>
+      <mat-select [value]="filtro().categoriaId ?? null" (valueChange)="actualizarFiltro({ categoriaId: $event })">
+        <mat-option [value]="null">Todas</mat-option>
+        @for (categoria of categorias(); track categoria.id) {
+          <mat-option [value]="categoria.id">{{ categoria.nombre }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (auth.esStaff()) {
+      <mat-form-field class="w-48">
+        <mat-label>Técnico</mat-label>
+        <mat-select
+          [value]="filtro().asignadoId ?? null"
+          [disabled]="!!filtro().sinAsignar"
+          (valueChange)="actualizarFiltro({ asignadoId: $event })"
+        >
+          <mat-option [value]="null">Cualquiera</mat-option>
+          @for (tecnico of tecnicos(); track tecnico.id) {
+            <mat-option [value]="tecnico.id">{{ tecnico.nombre }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+      <mat-checkbox
+        [checked]="!!filtro().sinAsignar"
+        (change)="actualizarFiltro({ sinAsignar: $event.checked, asignadoId: null })"
+      >
+        Sin asignar
+      </mat-checkbox>
+    }
+
+    @if (filtroActivo()) {
+      <button matButton type="button" (click)="limpiarFiltros()">
+        <mat-icon>filter_alt_off</mat-icon>
+        Limpiar
+      </button>
+    }
+  </div>
+
+  <!-- Tabla -->
+  <section class="overflow-hidden rounded-xl border border-line bg-surface">
+    <div class="h-1">
+      @if (cargando()) {
+        <mat-progress-bar mode="indeterminate" />
+      }
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[880px] border-collapse text-left" matSort matSortActive="createdAt" matSortDirection="desc" (matSortChange)="ordenar($event)">
+        <thead>
+          <tr class="border-b border-line bg-surface-2 text-xs font-semibold uppercase tracking-wide text-subtle">
+            <th class="h-11 w-32 px-6 font-semibold" mat-sort-header="id">Código</th>
+            <th class="px-4 font-semibold" mat-sort-header="titulo">Título</th>
+            <th class="w-36 px-4 font-semibold">Estado</th>
+            <th class="w-32 px-4 font-semibold">Prioridad</th>
+            <th class="w-48 px-4 font-semibold">Asignado a</th>
+            <th class="w-36 px-6 font-semibold" mat-sort-header="updatedAt">Actualizado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ticket of resultado()?.contenido; track ticket.id) {
+            <tr class="h-14 border-b border-line last:border-b-0 hover:bg-surface-2">
+              <td class="px-6 font-mono text-[13px] text-subtle">{{ ticket.codigo }}</td>
+              <td class="max-w-0 px-4">
+                <a [routerLink]="['/tickets', ticket.id]" class="block truncate text-sm font-medium text-ink no-underline hover:text-primary hover:underline">
+                  {{ ticket.titulo }}
+                </a>
+                <span class="text-xs text-subtle">{{ ticket.categoria.nombre }}</span>
+              </td>
+              <td class="px-4"><app-estado-badge [estado]="ticket.estado" /></td>
+              <td class="px-4"><app-prioridad-badge [prioridad]="ticket.prioridad" /></td>
+              <td class="px-4">
+                @if (ticket.asignado; as asignado) {
+                  <span class="flex items-center gap-2 text-[13px]">
+                    <app-avatar [nombre]="asignado.nombre" />
+                    <span class="truncate">{{ asignado.nombre }}</span>
+                  </span>
+                } @else {
+                  <span class="flex items-center gap-2 text-[13px] text-subtle">
+                    <span class="size-6 rounded-full border-[1.5px] border-dashed border-line"></span>
+                    Sin asignar
+                  </span>
+                }
+              </td>
+              <td class="px-6 text-[13px] text-subtle">{{ ticket.updatedAt | tiempoRelativo }}</td>
+            </tr>
+          } @empty {
+            @if (!cargando()) {
+              <tr>
+                <td colspan="6" class="px-6 py-16 text-center">
+                  <div class="mx-auto flex max-w-sm flex-col items-center gap-3">
+                    <span class="flex size-12 items-center justify-center rounded-full bg-primary-soft text-primary">
+                      <mat-icon aria-hidden="true">{{ filtroActivo() ? 'search_off' : 'inbox' }}</mat-icon>
+                    </span>
+                    @if (filtroActivo()) {
+                      <p class="m-0 text-base font-semibold">No hay tickets con esos filtros</p>
+                      <button matButton type="button" (click)="limpiarFiltros()">Limpiar filtros</button>
+                    } @else {
+                      <p class="m-0 text-base font-semibold">Todavía no hay tickets</p>
+                      <p class="m-0 text-sm text-muted">Cuando reportes una incidencia aparecerá aquí.</p>
+                      <button matButton="filled" type="button" (click)="nuevoTicket()">Crear el primero</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+    <mat-paginator
+      class="border-t border-line"
+      [length]="resultado()?.totalElementos ?? 0"
+      [pageIndex]="pagina()"
+      [pageSize]="tamanio()"
+      [pageSizeOptions]="[10, 20, 50]"
+      (page)="cambiarPagina($event)"
+    />
+  </section>
+</div>
